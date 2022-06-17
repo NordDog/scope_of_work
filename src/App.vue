@@ -1,25 +1,49 @@
 <template>
   <v-app>
     <v-main>
-      <!-- <drag_n_drop /> -->
-      <scope_of_work/>
+      <div style="display: flex;">
+        <div :class="{'expanded': !mini}">
+          <v-btn
+            large
+            icon
+            @click.stop="mini = !mini"
+          >
+            <v-icon>mdi-menu</v-icon>
+          </v-btn>
+          <menu-app v-if="!mini"/>
+        </div>
+        <scope_of_work :class="{'menu-expanded': !mini }"/>
+      </div>
     </v-main>
   </v-app>
 </template>
 
 <script>
 import scope_of_work from './components/scope_of_work';
-// import drag_n_drop from './components/drag_n_drop.vue';
+import menuApp from './components/menu';
 export default {
   name: 'App',
 
   components: {
     scope_of_work,
-    // drag_n_drop
+    menuApp
   },
 
-  data: () => ({
-    //
-  }),
+  data(){
+    return {
+      mini: true,
+    }
+  },
+  mounted(){
+    this.$store.dispatch('GET_APP_SETTINGS');
+  }
 };
 </script>
+<style scoped>
+.expanded{
+  width: 15%;
+}
+.menu-expanded{
+  width: 85%;
+}
+</style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="px-5 pt-7">
+  <div class="pr-5 pt-7">
     <v-row>
       <v-col cols="7">
         <v-autocomplete
@@ -17,7 +17,7 @@
       <v-col>
         <v-btn 
           x-large color="primary" 
-          @click="getTasks()"
+          @click="setOpt()"
         >Go!</v-btn>
       </v-col>
     </v-row>
@@ -45,6 +45,10 @@
       taskTypes: {}
     }),
     methods: {
+      setOpt(){
+        BX24.callMethod('user.option.set',{options:{selected: JSON.stringify(this.selected)}});
+        this.getTasks();
+      },
       getTasks() {
         let 
         taskFilter = {
@@ -65,9 +69,7 @@
               }
             }
           }
-          BX24.callMethod('user.option.set',{options:{selected:JSON.stringify(this.selected)}})
         }
-        console.log(userFilter)
         BX24.complexBatch({
             tasks: ["tasks.task.list",
               {
@@ -114,7 +116,15 @@
             for(let item of res.task_types_0.data().LIST){
               this.$set(this.taskTypes, item.ID, item.VALUE);
             }
-            this.parseTasks(tasks, resusers);
+            
+            BX24.callMethod('user.option.get',{},res=>{
+              let answer = res.data();
+              if(answer.selected.length > 5 && this.selected.length == 0) {
+                this.selected = JSON.parse(answer.selected);
+                this.getTasks();
+              }
+              else this.parseTasks(tasks, resusers);
+            })
           }
         );
       },
@@ -184,11 +194,6 @@
     },
     mounted() {
       this.getTasks();
-      BX24.callMethod('user.option.get',{},res=>{
-        let answer = res.data();
-        if(answer.selected) this.selected = JSON.parse(answer.selected);
-        this.getTasks();
-      })
     }
   }
 </script>

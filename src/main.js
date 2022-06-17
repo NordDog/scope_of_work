@@ -3,6 +3,7 @@ import App from './App.vue'
 import vuetify from './plugins/vuetify'
 import BX24 from './bitrix24-rest.js'//TODO: don't forget comment it!!!
 import './bitrix24-complexBatch.js'
+import store from './store'
 
 Vue.config.productionTip = false
 
@@ -18,6 +19,7 @@ if(BX24 && typeof BX24.initAuth == "function") BX24.initAuth({
 BX24.init(()=>{
   new Vue({
     vuetify,
+    store,
     render: h => h(App)
   }).$mount('#app')
 })
