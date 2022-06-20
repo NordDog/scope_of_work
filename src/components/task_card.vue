@@ -31,7 +31,13 @@
 
 
       <div class="card_footer">
-        <div class="task_type py-" v-if="task.ufTaskType"><span class="px-2">{{task.type}}</span></div>
+        <!-- <div class="task_type" v-if="task.ufTaskType" ><span class="px-2">{{task.type}}</span></div> -->
+        <div 
+          :style="'background-color:' + tag.color + '; color:'+tag.textColor"
+          class="task_type" 
+          v-for="tag in this.tags"
+          :key="tag.value" 
+        ><span class="px-2">{{tag.name}}</span></div>
         <div :title="task.creator.name">
           <img
             v-if="!task.creator.icon.includes('default_avatar.png')"
@@ -51,6 +57,7 @@
 
 <script>
 import moment from 'moment';
+import {mapGetters} from 'vuex';
   export default {
     name: 'task_card',
     props:{
@@ -64,6 +71,19 @@ import moment from 'moment';
       deadline(){
         let result = 'нет дедлайна';
         if(this.task.deadline) result = moment(this.task.deadline).format('DD.MM.YYYY');
+        return result;
+      },
+      ...mapGetters({
+        settings:'GET_SETTINGS'
+      }),
+      tags(){
+        let result = [];
+        for(let tag of this.settings.tags){
+          if(tag.value == this.task.ufTaskType){
+            tag.textColor = Boolean(tag.darkMode) ? 'white' : 'black'; 
+            result.push(tag);
+          }
+        }
         return result;
       }
     },
@@ -124,7 +144,7 @@ import moment from 'moment';
   height: 50px;
 }
 .task_type{
-  background-color: rgb(125, 109, 173);
+  /* background-color: rgb(125, 109, 173); */
   color: white;
   border-radius: 5px;
   position: absolute;

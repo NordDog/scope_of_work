@@ -62,10 +62,18 @@
         if(this.selected.length > 0){
           userFilter.ID = [];
           for(let item of this.selected){
-            if(item.type == 'user') userFilter.ID.push(item.id);
+            if(item.type == 'user'){
+              if(taskFilter.RESPONSIBLE_ID) taskFilter.RESPONSIBLE_ID.push(item.id)
+              else taskFilter.RESPONSIBLE_ID = [item.id]
+              userFilter.ID.push(item.id);
+            }
             else if(item.type == 'dept'){
               for(let elem of this.deptsAndUsers){
-                if(elem.type == 'user' && elem.dept == item.id) userFilter.ID.push(elem.id); 
+                if(elem.type == 'user' && elem.dept == item.id) {
+                  if(taskFilter.RESPONSIBLE_ID) taskFilter.RESPONSIBLE_ID.push(item.id)
+                  else taskFilter.RESPONSIBLE_ID = [item.id]
+                  userFilter.ID.push(elem.id);
+                } 
               }
             }
           }
@@ -84,7 +92,8 @@
                   'TITLE',
                   'TIME_SPENT_IN_LOGS',
                   'CREATED_BY',
-                  'DEADLINE'
+                  'DEADLINE',
+                  'PARENT_ID'
                 ], 
                 order: { DEADLINE: "asc" }
               }
@@ -97,7 +106,8 @@
               tasks = [], 
               resusers = [],
               secans, 
-              ans;
+              ans, 
+              parents = [];
             for (let i = 0; (ans = res["users_" + i], secans = res["depts_"+i]); i++) {
               resusers.push(...ans.data())
               if(this.deptsAndUsers.length == 0) {
@@ -106,13 +116,19 @@
                 }
                 for(let dept of secans.data()){
                   this.deptsAndUsers.push({name: dept.NAME, id: dept.ID, type: 'dept'});
-                }                
+                }
               }
             }
             for (let i = 0; (ans = res["tasks_" + i]); i++) {
               ans = ans.data().tasks;
+              for(let task of ans){
+                if(task.parentId && !parents.includes(task.parentId) && task.parentId != 0) parents.push(task.parentId);
+              }
               tasks.push(...ans);
             }
+        if(parents.length){
+          this.getParentTasks(parents)
+        }
             for(let item of res.task_types_0.data().LIST){
               this.$set(this.taskTypes, item.ID, item.VALUE);
             }
@@ -191,6 +207,17 @@
         });
         this.weeks = weeks;
       },
+      getParentTasks(parents){
+        BX24.complexBatch({tasks: ["tasks.task.list",{filter: {ID: parents}, select:['NAME', 'GROUP_ID','TITLE']}]}, res=>{
+          let 
+            tasks = [],
+            ans;
+          for (let i = 0; (ans = res["tasks_" + i]); i++) {
+            ans = ans.data().tasks;
+            tasks.push(...ans);
+          }
+        });
+      }
     },
     mounted() {
       this.getTasks();

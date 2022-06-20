@@ -131,6 +131,7 @@
 
 <script>
   import moment from "moment";
+  import {mapGetters} from 'vuex';
   import task_card from './task_card.vue';
   export default {
     name: 'user_card',
@@ -156,7 +157,7 @@
         'background-color: #9786bd',
       ],
       weekdays: [1,2,3,4,5],
-      hoursInWeek: 30,
+      //hoursInWeek: 30,
     }),
     props:{
       user: Object,
@@ -282,7 +283,10 @@
       },
       hoursLeft(){
         return this.hoursInWeek - (((this.hoursInWeek/5).toFixed(1))*(this.today-1));
-      }
+      },
+      ...mapGetters({
+        hoursInWeek: 'GET_HOURS'
+      })
     }
   }
 </script>

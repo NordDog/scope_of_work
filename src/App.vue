@@ -6,7 +6,7 @@
           <v-btn
             large
             icon
-            @click.stop="mini = !mini"
+            @click.stop="toggleMenu()"
           >
             <v-icon>mdi-menu</v-icon>
           </v-btn>
@@ -34,8 +34,17 @@ export default {
       mini: true,
     }
   },
+  methods:{
+    toggleMenu(){
+      if(!this.mini){
+        this.$store.dispatch('PUSH_SETTINGS');
+      }
+      this.mini = !this.mini;
+    }
+  },
   mounted(){
     this.$store.dispatch('GET_APP_SETTINGS');
+    this.$store.dispatch('GET_FIRSTDATE');
   }
 };
 </script>
