@@ -1,59 +1,47 @@
 <template>
-  <div class="pa-4">
+  <div class="pa-4 mr-1">
     <v-text-field
       dense
       outlined
-      label="Доступно часов в неделю"
+      placeholder="Доступно часов в неделю"
       type="number"
       v-model="settings.hInWeek"
       @input="updateSettings()"
+      hide-details
+      class="mb-5"
     >
       <template v-slot:append-outer>
-        <v-menu
-          open-on-hover
-          top
-          offset-y
-        >
-          <template v-slot:activator="{ on, attrs }">
+        <v-tooltip right max-width="400">
+          <template v-slot:activator="{on}">
             <v-icon
-              v-bind="attrs"
               v-on="on"
+              style="margin-left: auto;"
             >mdi-information-outline</v-icon>
           </template>
-          <v-card width="200">
-            <v-card-text>
-              <p class="ma-0">Укажите в этом поле сколько часов в неделю доступно для планирования</p>
-            </v-card-text>
-          </v-card>
-        </v-menu>
+          <span>Укажите в этом поле сколько часов в неделю доступно для планирования</span>
+        </v-tooltip>
       </template>
     </v-text-field>
     <v-select
       dense
       outlined
-      label="Заголовок карточки задачи"
+      placeholder="Заголовок карточки задачи"
       :items="taskHeaders"
       v-model="settings.taskHeader"
       @change="updateSettings()"
+      hide-details
+      class="mb-4"
     >
       <template v-slot:append-outer>
-        <v-menu
-          open-on-hover
-          top
-          offset-y
-        >
-          <template v-slot:activator="{ on, attrs }">
+        <v-tooltip right max-width="400">
+          <template v-slot:activator="{on}">
             <v-icon
-              v-bind="attrs"
               v-on="on"
+              style="margin-left: auto;"
             >mdi-information-outline</v-icon>
           </template>
-          <v-card width="200">
-            <v-card-text>
-              <p class="ma-0">Выберите в этом поле какая информация будет отображена как заголовок карточки заявки</p>
-            </v-card-text>
-          </v-card>
-        </v-menu>
+          <span>Выберите в этом поле какая информация будет отображена как заголовок карточки заявки</span>
+        </v-tooltip>
       </template>
     </v-select>
     <div style="display: flex;">
@@ -61,46 +49,46 @@
         label="Заголовок родителя"
         v-model="settings.setHeaderFromMainTask"
         @change="updateSettings()"
+        hide-details
       ></v-switch>
-      <v-menu
-        open-on-hover
-        top
-        offset-y
-      >
-        <template v-slot:activator="{ on, attrs }">
+      <v-tooltip right max-width="400">
+        <template v-slot:activator="{on}">
           <v-icon
-            v-bind="attrs"
             v-on="on"
             style="margin-left: auto;"
           >mdi-information-outline</v-icon>
         </template>
-        <v-card width="200">
-          <v-card-text>
-            <p class="ma-0">Указывать ли в подзадаче заголовком группу или сделку из основной задачи</p>
-          </v-card-text>
-        </v-card>
-      </v-menu>
+        <span>Указывать ли в подзадаче заголовком группу или сделку из основной задачи</span>
+      </v-tooltip>
     </div>
-    <div style="display: flex;">
-      <p class="mb-0">Тэги:</p>
-      <v-menu
-        open-on-hover
-        top
-        offset-y
-      >
-        <template v-slot:activator="{ on, attrs }">
+    <div style="display: flex;" class="mb-4">
+      <v-switch
+        label="Задачи на проверке"
+        v-model="settings.useTaskUnderReview"
+        @change="updateSettings()"
+        hide-details
+      ></v-switch>
+      <v-tooltip right max-width="400">
+        <template v-slot:activator="{on}">
           <v-icon
-            v-bind="attrs"
             v-on="on"
             style="margin-left: auto;"
           >mdi-information-outline</v-icon>
         </template>
-        <v-card width="200">
-          <v-card-text>
-            <p class="ma-0">Выберите цвета тэгов, для отображения в карточках задач</p>
-          </v-card-text>
-        </v-card>
-      </v-menu>
+        <span>Учитывать в приложении задачи, находящиеся на проверке у постановщика</span>
+      </v-tooltip>
+    </div>
+    <div style="display: flex;" class="mb-3">
+      <p class="mb-0">Тэги:</p>
+      <v-tooltip right max-width="400">
+        <template v-slot:activator="{on}">
+          <v-icon
+            v-on="on"
+            style="margin-left: auto;"
+          >mdi-information-outline</v-icon>
+        </template>
+        <span>Выберите цвета тэгов, для отображения в карточках задач</span>
+      </v-tooltip>
     </div>
     <div class="tagsbox">
         <v-menu
@@ -161,7 +149,6 @@ export default {
           value: 'title'
         },
       ],
-      selectedHeader: '',
     }
   },
   methods:{

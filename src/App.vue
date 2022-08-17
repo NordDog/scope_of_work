@@ -2,8 +2,9 @@
   <v-app>
     <v-main>
       <div style="display: flex;">
-        <div :class="{'expanded': !mini}">
+        <div :class="{'expanded': !mini}" class="pt-8" v-if="isAdmin">
           <v-btn
+            v-if="$root.info.placement != 'TASK_VIEW_TAB'"
             large
             icon
             @click.stop="toggleMenu()"
@@ -32,6 +33,7 @@ export default {
   data(){
     return {
       mini: true,
+      isAdmin: this.$root.isAdmin
     }
   },
   methods:{
@@ -44,6 +46,7 @@ export default {
   },
   mounted(){
     this.$store.dispatch('GET_APP_SETTINGS');
+    
     this.$store.dispatch('GET_FIRSTDATE');
   }
 };

@@ -1,35 +1,112 @@
 <template>
-  <div class="pr-5 pt-7">
+  <div class="pr-5 pt-7" style="width: 100%;">
     <v-row>
-      <v-col cols="7">
+      <v-col cols="7" style="min-width:600px;">
         <v-autocomplete
           dence
           multiple
           outlined
-          clearable
-          label="Пользователь или подразделение"
+          placeholder="Фильтр по пользователям или подразделениям"
           :items="deptsAndUsers"
           return-object
           item-text="name"
           v-model="selected"
-        ></v-autocomplete>
+          color="blue darken-3"
+          item-color="blue darken-3"
+        >
+          <template v-slot:append>
+            <v-btn icon @click="setOpt()">
+              <v-icon large>mdi-magnify</v-icon>
+            </v-btn>
+          </template>
+          <!-- <template v-slot:append-outer v-if="selected.length">
+            <v-btn icon @click="()=>{selected = []}">
+              <v-icon large>mdi-close</v-icon>
+            </v-btn>
+          </template> -->
+          <template v-slot:prepend-item>
+              <div class="first-item">
+                <v-btn
+                  text
+                  class="selectall"
+                  @click="toggleSelected()"
+                >
+                  {{isSelectAll ? 'выбрать всех' : 'очистить'}}
+                </v-btn>
+                <v-btn 
+                  outlined 
+                  :color="isResp ? 'teal' : 'secondary'" 
+                  text
+                  @click="$store.dispatch('SET_IS_RESP', true)"
+                >
+                  ответственный
+                </v-btn>
+                <v-btn 
+                  class="ml-5" 
+                  :color="!isResp ? 'teal' : 'secondary'" 
+                  outlined 
+                  text
+                  @click="$store.dispatch('SET_IS_RESP', false)"
+                >
+                  постановщик
+                </v-btn>
+              </div>
+          </template>
+        </v-autocomplete>
       </v-col>
-      <v-col>
+      <!-- <v-col cols="1">
         <v-btn 
           x-large color="primary" 
           @click="setOpt()"
         >Go!</v-btn>
-      </v-col>
+      </v-col> -->
     </v-row>
-    <v-row v-for="(user, user_index) in tasks" :key="user_index">
-      <v-col cols="12" class="pa-0">
-        <user_card :user="user" :weeks="weeks"/>
-      </v-col>
-    </v-row>
+    <div v-if="isResp">
+      <!-- 
+        тут добавить условие для отрисовки, если филтр по ответственным, то перебирать выбранных пользоватлей
+        если фильтр по постановщикам, то через вычисляемое свойство забирать подходящих пользователей и перебирать их
+       -->
+      <v-row v-for="(user, user_index) in selectedUsers" :key="user_index">
+        <div class="pa-0" style="flex-basis: 0; flex-grow: 1;">
+          <user_card :user="user" :tasks="tasks[+user.id]" :weeks="weeks"/>
+        </div>
+      </v-row>
+    </div>
+
+    <div v-else>
+      <v-row v-for="user in responsibles" :key="user.id">
+        <div class="pa-0" style="flex-basis: 0; flex-grow: 1;">
+          <user_card :user="user" :tasks="tasks[+user.id]" :weeks="weeks"/>
+        </div>
+      </v-row>
+    </div>
+
+    <v-dialog
+      v-model="dialog"
+      hide-overlay
+      persistent
+      width="300"
+    >
+      <v-card
+        color="primary"
+        dark
+      >
+        <v-card-text>
+          {{loaderText}}
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    
   </div>
 </template>
 
 <script>
+  import {mapGetters} from 'vuex';
   import moment from "moment";
   import user_card from './user_card.vue'
   export default {
@@ -38,189 +115,57 @@
       user_card
     },
     data:()=>({
-      tasks: [],
-      weeks: [],
-      selected: [],
-      deptsAndUsers:[],
-      taskTypes: {}
+      // tasks: [],
+      // weeks: [],
+      //selected: [],
+      // //deptsAndUsers:[],
+      // isResp: true
+      isSelectAll: true,
     }),
     methods: {
       setOpt(){
         BX24.callMethod('user.option.set',{options:{selected: JSON.stringify(this.selected)}});
-        this.getTasks();
+        this.$store.dispatch('GET_USERS_TASKS')
       },
-      getTasks() {
-        let 
-        taskFilter = {
-          'STATUS': ['1', '2', '3'],
-        },
-        userFilter = {
-          'USER_TYPE':'employee', 
-          'ACTIVE': true
-        };
-        this.getTimeRange();
-        if(this.selected.length > 0){
-          userFilter.ID = [];
-          for(let item of this.selected){
-            if(item.type == 'user'){
-              if(taskFilter.RESPONSIBLE_ID) taskFilter.RESPONSIBLE_ID.push(item.id)
-              else taskFilter.RESPONSIBLE_ID = [item.id]
-              userFilter.ID.push(item.id);
-            }
-            else if(item.type == 'dept'){
-              for(let elem of this.deptsAndUsers){
-                if(elem.type == 'user' && elem.dept == item.id) {
-                  if(taskFilter.RESPONSIBLE_ID) taskFilter.RESPONSIBLE_ID.push(item.id)
-                  else taskFilter.RESPONSIBLE_ID = [item.id]
-                  userFilter.ID.push(elem.id);
-                } 
-              }
-            }
-          }
+      toggleSelected(){
+        this.isSelectAll = !this.isSelectAll;
+        if(!this.isSelectAll){
+          this.selected = this.deptsAndUsers.filter(item=>item.type == 'user');
+        } else {
+          this.selected = [];
         }
-        BX24.complexBatch({
-            tasks: ["tasks.task.list",
-              {
-                filter: taskFilter, 
-                select: [
-                  'REAL_STATUS', 
-                  'UF_TASK_TYPE', 
-                  'RESPONSIBLE_ID', 
-                  'TIME_ESTIMATE', 
-                  'NAME', 
-                  'GROUP_ID',
-                  'TITLE',
-                  'TIME_SPENT_IN_LOGS',
-                  'CREATED_BY',
-                  'DEADLINE',
-                  'PARENT_ID'
-                ], 
-                order: { DEADLINE: "asc" }
-              }
-            ],
-            users: ['user.get', {filter:userFilter}],
-            depts: ['department.get', {}],
-            task_types: ['task.item.userfield.get', {'ID': 804}], 
-          },res => {
-            let 
-              tasks = [], 
-              resusers = [],
-              secans, 
-              ans, 
-              parents = [];
-            for (let i = 0; (ans = res["users_" + i], secans = res["depts_"+i]); i++) {
-              resusers.push(...ans.data())
-              if(this.deptsAndUsers.length == 0) {
-                for(let user of ans.data()){
-                  this.deptsAndUsers.push({name: user.NAME+' '+user.LAST_NAME, id: user.ID, type: 'user', dept: user.UF_DEPARTMENT});
-                }
-                for(let dept of secans.data()){
-                  this.deptsAndUsers.push({name: dept.NAME, id: dept.ID, type: 'dept'});
-                }
-              }
-            }
-            for (let i = 0; (ans = res["tasks_" + i]); i++) {
-              ans = ans.data().tasks;
-              for(let task of ans){
-                if(task.parentId && !parents.includes(task.parentId) && task.parentId != 0) parents.push(task.parentId);
-              }
-              tasks.push(...ans);
-            }
-        if(parents.length){
-          this.getParentTasks(parents)
-        }
-            for(let item of res.task_types_0.data().LIST){
-              this.$set(this.taskTypes, item.ID, item.VALUE);
-            }
-            
-            BX24.callMethod('user.option.get',{},res=>{
-              let answer = res.data();
-              if(answer.selected.length > 5 && this.selected.length == 0) {
-                this.selected = JSON.parse(answer.selected);
-                this.getTasks();
-              }
-              else this.parseTasks(tasks, resusers);
-            })
-          }
-        );
+      }
+    },
+    computed: {
+      ...mapGetters({
+        dialog: 'GET_LOADING_DIALOG',
+        loaderText: 'GET_LOADING_TEXT',
+        weeks: 'GET_WEEKS',
+        tasks: 'GET_RESULT',
+        deptsAndUsers: 'GET_DEPTS_AND_USERS',
+        selectedUsers: 'GET_SELECTED_USERS',
+        isResp: 'GET_IS_RESP'
+      }),
+      selected:{
+        get(){return this.$store.getters.GET_SELECTED;},
+        set(val){this.$store.dispatch('SET_SELECTED', val);}
       },
-      parseTasks(tasks, users) {
-        let res = {}, taskIDs = [];
-        for (let user of users) {
-          res[user.ID]= {
-            userData: {
-              name: user.NAME+' '+user.LAST_NAME,
-              id: user.ID,
-            },
-            tasks: [],
-          }
-          taskIDs = [];
-          for(let weekCounter in this.weeks){
-            for(let task of tasks){
-              this.$set(task, 'type', this.taskTypes[Number(task.ufTaskType)])
-              if(task.responsibleId != user.ID) continue;
-              if(task.timeEstimate == 0 || !task.deadline){
-                if(taskIDs.includes(task.id)) continue;
-                task.weekNum = 'queue';
-                res[task.responsibleId].tasks.push(task);
-                taskIDs.push(task.id);
-                continue;
-              }
-              if (
-                moment(task.deadline).isSameOrAfter(moment(this.weeks[weekCounter].start + "T00:00:00"))
-                && moment(task.deadline).isSameOrBefore(moment(this.weeks[weekCounter].end + "T23:59:59"))
-              ) {
-                task.weekNum = weekCounter;
-                res[task.responsibleId].tasks.push(task);
-              }
-            }
-          }
-        }
-        this.tasks = res;
-      },
-      getTimeRange() {
-        let dateStart = moment().startOf("week").add(1, "d"),
-          dateEnd = moment().startOf("week").add(28, "d"),
-          startString = dateStart.format("D.MM.YYYY"),
-          endString = dateEnd.format("D.MM.YYYY");
+      responsibles(){
+        let result = [], userIds = Object.keys(this.tasks);
 
-        this.getWeeks(dateStart);
-        return { start: startString, end: endString };
-      },
-      getWeeks(start) {
-        let weeks = [];
-        weeks.push({
-          start: start.format("YYYY-MM-DD"),
-          end: start.add(6, "d").format("YYYY-MM-DD"),
-        });
-        weeks.push({
-          start: start.add(1, "d").format("YYYY-MM-DD"),
-          end: start.add(6, "d").format("YYYY-MM-DD"),
-        });
-        weeks.push({
-          start: start.add(1, "d").format("YYYY-MM-DD"),
-          end: start.add(6, "d").format("YYYY-MM-DD"),
-        });
-        weeks.push({
-          start: start.add(1, "d").format("YYYY-MM-DD"),
-          end: start.add(6, "d").format("YYYY-MM-DD"),
-        });
-        this.weeks = weeks;
-      },
-      getParentTasks(parents){
-        BX24.complexBatch({tasks: ["tasks.task.list",{filter: {ID: parents}, select:['NAME', 'GROUP_ID','TITLE']}]}, res=>{
-          let 
-            tasks = [],
-            ans;
-          for (let i = 0; (ans = res["tasks_" + i]); i++) {
-            ans = ans.data().tasks;
-            tasks.push(...ans);
+        for(let item of this.deptsAndUsers){
+          if(item.type == 'user' && userIds.includes(item.id)){
+            result.push(item);
+            console.log(item);
           }
-        });
+
+        }
+
+        return result;
       }
     },
     mounted() {
-      this.getTasks();
+      //this.selected = this.$store.getters.GET_SELECTED;
     }
   }
 </script>
@@ -230,5 +175,24 @@
 }
 html{
   overflow-x: auto;
+}
+.v-application--is-ltr .v-text-field .v-input__append-inner{
+  margin-top: 0px;
+  align-self: center;
+}
+.v-text-field--outlined .v-input__append-outer{
+  margin-top: 10px !important;
+}
+.first-item{
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.v-select__slot{
+  padding-left: 15px;
+}
+.selectall{
+  position: absolute;
+  left: 35px;
 }
 </style>

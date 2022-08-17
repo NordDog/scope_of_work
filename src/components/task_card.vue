@@ -2,8 +2,7 @@
   <v-card class="card">
     <v-card-text class="pa-0">
       <div class="card_header">
-        <p class="task_project" v-if="task.group.name" :title="task.group.name">{{ task.group.name|cutProjectTitle }}</p>
-        <p class="task_project" style="color: darkred" v-else :title="task.group.name">НЕТ ГРУППЫ!!!</p>
+        <p class="task_project" :title="task.group.name">{{ title|cutProjectTitle }}</p>
         <p class="task_deadline">{{ deadline }}</p>
       </div>
       
@@ -85,6 +84,23 @@ import {mapGetters} from 'vuex';
           }
         }
         return result;
+      },
+      title(){
+        let res = 'не найдено';
+        if(this.settings.taskHeader == 'title'){
+          if(this.settings.setHeaderFromMainTask){
+            if(this.task.parentId > 0 && this.task.parentTask && this.task.parentTask.deal) res = this.task.parentTask.deal.TITLE;
+          } else {
+            if(this.task.deal) res = this.task.deal.TITLE;
+          }
+        } else if(this.settings.taskHeader == 'group'){
+          if(this.settings.setHeaderFromMainTask){
+            if(this.task.parentId > 0 && this.task.parentTask && this.task.parentTask.group) res = this.task.parentTask.group.name;
+          } else {
+            if(this.task.groupId > 0) res = this.task.group.name;
+          }
+        }
+        return res
       }
     },
     filters:{
