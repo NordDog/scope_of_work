@@ -1,5 +1,5 @@
 <template>
-  <div v-if="tasks" class="mr-5">
+  <div class="mr-5">
     <v-card>
       <v-card-title class="pl-6 py-1 mb-2 card-header">{{ user.name }}</v-card-title>
       <v-card-text class="text-center pb-2 px-2 mb-5" style="display: flex;">
@@ -350,7 +350,7 @@
       })
     },
     mounted(){
-      this.xTasks = this.tasks.tasks;
+      this.xTasks = this.tasks ? this.tasks.tasks : [];
     }
   }
 </script>

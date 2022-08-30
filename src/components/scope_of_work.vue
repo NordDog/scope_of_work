@@ -74,7 +74,7 @@
     </div>
 
     <div v-else>
-      <v-row v-for="user in responsibles" :key="user.id">
+      <v-row v-for="user in selected" :key="user.id">
         <div class="pa-0" style="flex-basis: 0; flex-grow: 1;">
           <user_card :user="user" :tasks="tasks[+user.id]" :weeks="weeks"/>
         </div>
