@@ -61,25 +61,29 @@
         >Go!</v-btn>
       </v-col> -->
     </v-row>
-    <div v-if="isResp">
-      <!-- 
-        тут добавить условие для отрисовки, если филтр по ответственным, то перебирать выбранных пользоватлей
-        если фильтр по постановщикам, то через вычисляемое свойство забирать подходящих пользователей и перебирать их
-       -->
-      <v-row v-for="(user, user_index) in selectedUsers" :key="user_index">
-        <div class="pa-0" style="flex-basis: 0; flex-grow: 1;">
-          <user_card :user="user" :tasks="tasks[+user.id]" :weeks="weeks"/>
-        </div>
-      </v-row>
-    </div>
+    
+    <div>
 
-    <div v-else>
-      <v-row v-for="user in selected" :key="user.id">
-        <div class="pa-0" style="flex-basis: 0; flex-grow: 1;">
-          <user_card :user="user" :tasks="tasks[+user.id]" :weeks="weeks"/>
-        </div>
-      </v-row>
+<!--       <div v-if="isResp">
+        <v-row v-for="(user, user_index) in selectedUsers" :key="user_index">
+          <div class="pa-0" style="flex-basis: 0; flex-grow: 1;">
+            <user_card :user="user" :tasks="tasks[+user.id]" :weeks="weeks"/>
+          </div>
+        </v-row>
+      </div> -->
+
+      <div>
+        <v-row v-for="user in dispUser" :key="user.id">
+          <div class="pa-0" style="flex-basis: 0; flex-grow: 1;">
+            <user_card :user="user" :tasks="tasks[+user.id]" :weeks="weeks"/>
+          </div>
+        </v-row>
+      </div>
+    
+      <v-pagination v-model="page" :length="pages" :total-visible="5"></v-pagination>
+    
     </div>
+    
 
     <v-dialog
       v-model="dialog"
@@ -121,6 +125,8 @@
       // //deptsAndUsers:[],
       // isResp: true
       isSelectAll: true,
+      page: 1,
+      onPage: 5,
     }),
     methods: {
       setOpt(){
@@ -162,6 +168,24 @@
         }
 
         return result;
+      },
+      dispUser(){
+        let 
+        limit = this.onPage * this.page,
+        i = limit - this.onPage, 
+        visibleUs = []; 
+        while(i < limit){
+          if(this.isResp){
+            if(this.selectedUsers[i] && this.selectedUsers[i].id) visibleUs.push(this.selectedUsers[i]);
+          } else {
+            if(this.selected[i] && this.selected[i].id) visibleUs.push(this.selected[i]);
+          }
+          i++;
+        }
+        return visibleUs;
+      },
+      pages(){
+        return this.isResp ? Math.ceil(this.selectedUsers.length / this.onPage) : Math.ceil(this.selected.length / this.onPage)
       }
     },
     mounted() {

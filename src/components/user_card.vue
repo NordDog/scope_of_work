@@ -1,7 +1,11 @@
 <template>
   <div class="mr-5">
     <v-card>
-      <v-card-title class="pl-6 py-1 mb-2 card-header">{{ user.name }}</v-card-title>
+      <v-card-title class="pl-6 py-1 mb-2 card-header">
+        {{ user.name }}
+        <v-spacer></v-spacer>
+        <v-btn>kaka</v-btn>
+      </v-card-title>
       <v-card-text class="text-center pb-2 px-2 mb-5" style="display: flex;">
         <div class="weekbox" v-if="$root.info.placement != 'TASK_VIEW_TAB'">
           <div class="drop-zone" @drop="onDrop($event, 'queue')" @dragover.prevent @dragenter.prevent>

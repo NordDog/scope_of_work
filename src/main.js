@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import vuetify from './plugins/vuetify'
-// import BX24 from './bitrix24-rest.js'//TODO: don't forget comment it!!!
+import BX24 from './bitrix24-rest.js'//TODO: don't forget comment it!!!
 import './bitrix24-complexBatch.js'
 import store from './store'
 
@@ -11,11 +11,11 @@ if(BX24 && typeof BX24.initAuth == "function") BX24.initAuth({
   client_id: "local.628df5b8f09c74.52146124",
   client_secret: "Kkxtpp6A2BOdo1CghL8j6U3QfE7phzZo4G670KDaU4WrddhaWY",
 
-  access_token: "b559e262005ba40e003e8582000001950000079a7cf406d79dcef38e2b106c5d3d0eb2",
+  access_token: "d5f34763005ba40e003e85820000044a0000071229c3ef24c1124275946e7d96a6201e",
   domain: "crm.mywebstor.com",
-  expires_in: 1659001268002,
+  expires_in: 1665659862456,
   member_id: "5f7e43d175a5eb7df1558ddb4bf75221",
-  refresh_token: "a5d80963005ba40e003e85820000019500000769616490b0cf6d0b2929d9abf07237f4",
+  refresh_token: "c5726f63005ba40e003e85820000044a000007fcf300dfa5863ae196edfba73a10146c",
 
   // placement: "TASK_VIEW_TAB",
   // placement_options: {

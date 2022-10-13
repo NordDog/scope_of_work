@@ -78,7 +78,7 @@ export default new Vuex.Store({
         })
       });
       let tags = new Promise(resolve=>{
-        BX24.callMethod('task.item.userfield.get', {ID: 804}, res=>(
+        BX24.callMethod('task.item.userfield.get', {ID: 804}, res=>(//TODO: вот это для маркета заменить на тэг
           resolve(res.data().LIST)
         ))
       })
@@ -148,7 +148,7 @@ export default new Vuex.Store({
       let userOptions = new Promise(resolve=>{
         BX24.callMethod('user.option.get', {}, res=>{
           let selected = [];
-          if(res.data().selected.length > 5) {
+          if(res.data().selected && res.data().selected.length > 5) {
             selected = JSON.parse((res.data().selected));
           }
           commit('SET_SELECTED', selected)
