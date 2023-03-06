@@ -4,7 +4,6 @@
       <v-card-title class="pl-6 py-1 mb-2 card-header">
         {{ user.name }}
         <v-spacer></v-spacer>
-        <v-btn>kaka</v-btn>
       </v-card-title>
       <v-card-text class="text-center pb-2 px-2 mb-5" style="display: flex;">
         <div class="weekbox" v-if="$root.info.placement != 'TASK_VIEW_TAB'">
@@ -99,30 +98,71 @@
           <p class="calendar-header-text">Укажите новый дедлайн</p>
         </v-card-title>
         <v-card-text>
-        <v-row justify="center" class="mt-9">
-          <v-date-picker 
-            v-model="date"
-            locale="ru-RU"
-            first-day-of-week="1"
-            :min="minDate"
-            :max="maxDate"
-            no-title
-          >
-          <v-row justify="center">
+        <v-row justify="center" class="mt-3">
+          <span class="myLittleTitle">{{monthsComparer[selectedDate.month]}} {{selectedDate.year}}</span>
+          <table>
+            <thead>
+              <tr>
+                <th>
+                  <h2>Пн</h2>
+                </th>
+                <th>
+                  <h2>Вт</h2>
+                </th>
+                <th>
+                  <h2>Ср</h2>
+                </th>
+                <th>
+                  <h2>Чт</h2>
+                </th>
+                <th>
+                  <h2>Пт</h2>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td v-for="date of dates" :key="date.day" class="px-3">
+                  <div
+                    :class="['fake_btn', {'super_active':date.day == selectedDate.day, 'disabledday': date.disabled}]"
+                    @click="selectedDate = date"
+                  >
+                    <span>{{date.day}}</span>
+                    <div style="display: inline-flex;" class="px-2">
+                      <v-tooltip right max-width="400">
+                        <template v-slot:activator="{on}">
+                          <span v-on="on">{{date.tasks.length}}</span>
+                        </template>
+                        <span>Количество задач с дедлайном на этот день</span>
+                      </v-tooltip>
+                      /
+                      <v-tooltip right max-width="400">
+                        <template v-slot:activator="{on}">
+                          <span v-on="on">{{date.timeLeft}}</span>
+                        </template>
+                        <span>Осталось часов по задачам с дедлайном на этот день</span>
+                      </v-tooltip>
+                    </div>                    
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <v-row justify="center" class="mt-2">
+            <!-- <span>Время:</span> -->
             <div style="width:290px;"  class="time-block d-flex">
-              <v-col cols="5" class="pl-0 pr-1 d-flex align-center">
+              <v-col cols="4" class="pl-0 pr-1 d-flex align-center">
                 <!-- <v-icon @click="timeControl(+hours - 1, true)">mdi-chevron-left</v-icon> -->
                 <v-text-field style="text-align-last: center;" type="number" v-model="hours" outlined dense hide-details @input="timeControl($event, true)"></v-text-field>
                 <!-- <v-icon @click="timeControl(+hours + 1, true)">mdi-chevron-right</v-icon> -->
               </v-col>
-              <v-col cols="5" class="pr-0 pl-1 d-flex align-center">
+              <v-col cols="4" class="pr-0 pl-1 d-flex align-center">
                 <!-- <v-icon @click="timeControl(+minutes - 1)">mdi-chevron-left</v-icon> -->
                 <v-text-field style="text-align-last: center;" type="number" v-model="minutes" outlined dense hide-details  @input="timeControl($event)"></v-text-field>
                 <!-- <v-icon @click="timeControl(+minutes + 1)">mdi-chevron-right</v-icon> -->
               </v-col>
             </div>
           </v-row>
-          </v-date-picker>
         </v-row>
         </v-card-text>
 
@@ -172,6 +212,7 @@
       minutes:'00',
       maxDate:'',
       minDate:'',
+      selectedDate:{},
       weekcolors:[
         'background-color: #97c89a',
         'background-color: #93cac4',
@@ -179,7 +220,21 @@
         'background-color: #9786bd',
       ],
       weekdays: [1,2,3,4,5],
-      xTasks:[]
+      xTasks:[],
+      monthsComparer:{
+        0:'Январь',
+        1:'Февраль',
+        2:'Март',
+        3:'Апрель',
+        4:'Май',
+        5:'Июнь',
+        6:'Июль',
+        7:'Август',
+        8:'Сентябрь',
+        9:'Октябрь',
+       10:'Ноябрь',
+       11:'Декабрь',
+      }
       //hoursInWeek: 30,
     }),
     props:{
@@ -248,9 +303,10 @@
         this.$delete(this.tasks, 're');
       },
       saveDeadline(){
+        let date = `${this.selectedDate.year}-${this.selectedDate.month+1}-${this.selectedDate.day}`
         BX24.callMethod(
           'tasks.task.update', 
-          {taskId: this.currtask.id, fields: {DEADLINE: new Date(this.date+'T'+this.hours+':'+this.minutes+":00")}}, 
+          {taskId: this.currtask.id, fields: {DEADLINE: new Date(date+'T'+this.hours+':'+this.minutes+":00")}}, 
           res=>{
             if(res.error())
               alert(res.error());
@@ -306,7 +362,10 @@
             this.prevWeek = tmp.weekNum;
             tmp.weekNum = list;
         }
-      }
+      },
+      setSelectedDate(date){
+        this.selectedDate = date;
+      },
     },
     filters:{
       dateToLocal(date){
@@ -314,6 +373,9 @@
       }
     },
     computed:{
+      ...mapGetters({
+        hoursInWeek: 'GET_HOURS'
+      }),
       taskWeeks(){
         let result = [], temp, hours = 0, hres = [];
         if(!this.tasks) return {tasks:[], hours: [0,0,0,0]};
@@ -349,9 +411,46 @@
       hoursLeft(){
         return this.hoursInWeek - (((this.hoursInWeek/5).toFixed(1))*(this.today-1));
       },
-      ...mapGetters({
-        hoursInWeek: 'GET_HOURS'
-      })
+      dates(){
+        let result = [], today = moment('2022-12-27');
+        if(this.minDate){
+          for(let index in this.weekdays){
+            let curDate = moment(this.minDate).add(index, 'd'),
+            tmp = {
+              day: curDate.date(),
+              month: curDate.month(),
+              year: curDate.year(),
+              tasks: [],
+              timeLeft: 0
+            };
+
+            for(let task of this.tasks.tasks){
+              let deadline = moment(task.deadlineOrig);
+              if(curDate.isSame(deadline, 'day')){
+                tmp.tasks.push(task);
+                if(task.timeSpentInLogs > 0){
+                  if(task.timeEstimate > task.timeSpentInLogs){
+                    tmp.timeLeft = +tmp.timeLeft + +Number((task.timeEstimate - task.timeSpentInLogs) / 3600).toFixed(1);
+                  }
+                }else{
+                  tmp.timeLeft = +tmp.timeLeft + +Number(task.timeEstimate  / 3600).toFixed(1);
+                }
+                if(tmp.day == 30)console.log(tmp.timeLeft)
+              }
+            }
+          
+            if(index == 0 ) this.setSelectedDate(tmp);
+            
+            if(curDate.isBefore(today, 'day')) tmp.disabled = true;
+
+            if(curDate.isSame(today, 'day')) this.setSelectedDate(tmp);
+            
+            result.push(tmp);
+
+          }
+        }
+        return result;
+      },
     },
     mounted(){
       this.xTasks = this.tasks ? this.tasks.tasks : [];
@@ -484,5 +583,28 @@
   background: linear-gradient(to right, #130cb7c2, #52e5e782);
   box-shadow: 0px 3px 1.96px 0.04px rgba(0, 0, 0, 0.18);
 }
-
+.fake_btn{
+    border-radius: 50%;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    padding-top: 3px;
+}
+.fake_btn:hover{
+  background-color: lightgrey;
+}
+.myLittleTitle{
+  width: 100%;
+  text-align: center;
+  margin-bottom: 5px;
+}
+.super_active{
+  background-color: rgb(136, 163, 214);
+}
+.disabledday{
+  color: lightgray !important;
+  background-color: unset !important;
+  cursor: unset;
+}
 </style>

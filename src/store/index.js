@@ -227,8 +227,8 @@ export default new Vuex.Store({
       parents = [],
       deals = [],
       tasks = [],
-      taskFilter = {'STATUS': ['1', '2', '3'], '>TIME_ESTIMATE': 0},
-      task1Filter = {'STATUS': ['1', '2', '3'], '>TIME_ESTIMATE': 0};
+      taskFilter = {'REAL_STATUS': ['1', '2', '3'], '>TIME_ESTIMATE': 0},
+      task1Filter = {'REAL_STATUS': ['1', '2', '3'], '>TIME_ESTIMATE': 0};
       if(state.settings.useTaskUnderReview){
         taskFilter.STATUS.push('4');
         task1Filter.STATUS.push('4');
